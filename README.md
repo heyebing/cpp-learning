@@ -23,7 +23,7 @@
     ```
     Hello, KVStore learner!
     ```
-- [代码入口](./go-http-demo/main.go)
+- [代码入口](./main.go)
 
 ---
 
