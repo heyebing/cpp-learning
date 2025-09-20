@@ -24,7 +24,73 @@
     Hello, KVStore learner!
     ```
 - [代码入口](./main.go)
+- ### ✅ Day 3
+一个简单的 **键值存储（KV Store）Web 服务**，用于练习 Go 语言和 HTTP 编程。  
+这是我 C++ KVStore 项目的延伸版本，把内存中的 KV Store 暴露为 Web API，支持 GET/SET 操作。
 
+## 功能
+
+- **设置键值对**  
+GET /set?key=<key>&value=<value>
+
+复制代码
+示例：
+http://localhost:8080/set?key=name&value=Alice
+
+复制代码
+返回：
+Set name = Alice
+
+markdown
+复制代码
+
+- **获取键值对**  
+GET /get?key=<key>
+
+复制代码
+示例：
+http://localhost:8080/get?key=name
+
+复制代码
+返回：
+Value = Alice
+
+bash
+复制代码
+
+## 技术栈
+
+- Go 语言（Golang）  
+- 标准库 `net/http`  
+
+## 使用方法
+
+1. 克隆仓库：
+ ```bash
+ git clone https://github.com/YourName/kvstore-go.git
+ cd kvstore-go
+运行服务器：
+
+bash
+复制代码
+go run main.go
+打开浏览器或用 curl 访问：
+
+bash
+复制代码
+curl "http://localhost:8080/set?key=name&value=Alice"
+curl "http://localhost:8080/get?key=name"
+今日收获
+学会 Go 的 匿名函数及如何作为回调函数传给 http.HandleFunc。
+
+理解 HTTP URL 的组成，能从 URL 获取查询参数。
+
+将一个简单的内存 KV Store 暴露为 Web 服务接口。
+
+yaml
+复制代码
+
+---
 ---
 
 ## 🌟 小感想
