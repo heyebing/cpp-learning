@@ -24,10 +24,11 @@
     Hello, KVStore learner!
     ```
 - [代码入口](./main.go)
--  ### ✅ Day 3
+ ### ✅ Day 3
 一个简单的 **键值存储（KV Store）Web 服务**，用于练习 Go 语言和 HTTP 编程。  
 这是我 C++ KVStore 项目的延伸版本，把内存中的 KV Store 暴露为 Web API，支持 GET/SET 操作。
-
+### ✅ Day 4
+学习了json相关的内容，为go语言部分新增了删除（delete）函数/
 ## 功能
 
 - **设置键值对**  
@@ -62,14 +63,14 @@ bash
 
 - Go 语言（Golang）  
 - 标准库 `net/http`  
+- 标准库 `encoding/json`  
 
 
 
 ## 🌟 小感想
 - C++：感觉很像“沉重的铁锤”，功能强大，但需要小心使用。  
 - Go：感觉就像“轻便的小刀”，上手简单，很快就能切开问题。  
-- 今天在浏览器里看到 `"Hello, KVStore learner!"` 的那一刻，超级有成就感！🚀
-
+- 嘛时候才是京门第一嘞~
 ---
 
 ## 🏃 目标
