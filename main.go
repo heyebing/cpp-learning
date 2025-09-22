@@ -6,6 +6,11 @@ import (
 	"net/http"
 )
 
+type KVRequest struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 // 定义一个全局 map 作为简单 KV Store
 var store = make(map[string]string)
 
@@ -65,6 +70,17 @@ func main() {
 		}
 		fmt.Fprintf(w, "Delete %s = %s\n", key, value)
 		delete(store, key)
+		respondJSON(w, map[string]string{"message": "Key deleted successfully"})
+	})
+	http.HandleFunc("/setjson", func(w http.ResponseWriter, r *http.Request) {
+		var req KVRequest
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil || req.Key == "" || req.Value == "" {
+			respondJSON(w, map[string]string{"error": "Invalid JSON"})
+			return
+		}
+		store[req.Key] = req.Value
+		respondJSON(w, map[string]string{"message": "Set successful"})
 	})
 
 	fmt.Println("Server running at http://localhost:8080/")
