@@ -28,17 +28,23 @@
 ---
 
  ### ✅ Day 3
-一个简单的 **键值存储（KV Store）Web 服务**，用于练习 Go 语言和 HTTP 编程。  
+ - 一个简单的 **键值存储（KV Store）Web 服务**，用于练习 Go 语言和 HTTP 编程。  
 这是我 C++ KVStore 项目的延伸版本，把内存中的 KV Store 暴露为 Web API，支持 GET/SET 操作。
 
 ---
 
 ### ✅ Day 4
-学习了json相关的内容，为go语言部分新增了删除（delete）函数/
+- 学习了json相关的内容，为go语言部分新增了删除（delete）函数/
+
 ---
 
 ### ✅ Day 5
-学习了如何直接输入json格式而不调用url输入。调用了新函数setjson使其可以支持json请求。
+- 学习了如何直接输入json格式而不调用url输入。调用了新函数setjson使其可以支持json请求。
+
+---
+
+### ✅ Day 5
+- 为go语言部分新增了更新（update）函数。完整了http中PUT接口，让这个玩具看起来更真实？
 ## 功能
 
 - **设置键值对**  

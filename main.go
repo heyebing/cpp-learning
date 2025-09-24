@@ -30,6 +30,28 @@ func main() {
 		store[key] = value
 		fmt.Fprintf(w, "Set %s = %s\n", key, value)
 	})
+	http.HandleFunc("/update", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
+			return
+		}
+
+		var req KVRequest
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil || req.Key == "" || req.Value == "" {
+			respondJSON(w, map[string]string{"error": "Invalid JSON"})
+			return
+		}
+
+		_, exists := store[req.Key]
+		if !exists {
+			respondJSON(w, map[string]string{"error": "Key not found"})
+			return
+		}
+
+		store[req.Key] = req.Value
+		respondJSON(w, map[string]string{"message": "Update successful"})
+	})
 	http.HandleFunc("/getjson", func(w http.ResponseWriter, r *http.Request) {
 		key := r.URL.Query().Get("key")
 		if key == "" {
