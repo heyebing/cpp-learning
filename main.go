@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type KVRequest struct {
@@ -11,27 +12,31 @@ type KVRequest struct {
 	Value string `json:"value"`
 }
 
-// 定义一个全局 map 作为简单 KV Store
+// 全局 KV Store
 var store = make(map[string]string)
 
-func respondJSON(w http.ResponseWriter, data interface{}) {
+// 统一响应格式
+func respondJSON(w http.ResponseWriter, status string, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
-}
-func main() {
-	// 设置 key-value
-	http.HandleFunc("/set", func(w http.ResponseWriter, r *http.Request) {
-		key := r.URL.Query().Get("key")
-		value := r.URL.Query().Get("value")
-		if key == "" || value == "" {
-			fmt.Fprintf(w, "Missing key or value\n")
-			return
-		}
-		store[key] = value
-		fmt.Fprintf(w, "Set %s = %s\n", key, value)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": status,
+		"data":   data,
 	})
-	http.HandleFunc("/update", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPut {
+}
+
+// 提取 URL 路径中的 key，例如 /kv/name -> name
+func getKeyFromPath(path string) string {
+	parts := strings.Split(path, "/")
+	if len(parts) >= 3 {
+		return parts[2]
+	}
+	return ""
+}
+
+func main() {
+	// 创建（POST /kv）
+	http.HandleFunc("/kv", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
 			http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
 			return
 		}
@@ -39,70 +44,60 @@ func main() {
 		var req KVRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil || req.Key == "" || req.Value == "" {
-			respondJSON(w, map[string]string{"error": "Invalid JSON"})
-			return
-		}
-
-		_, exists := store[req.Key]
-		if !exists {
-			respondJSON(w, map[string]string{"error": "Key not found"})
+			respondJSON(w, "error", "Invalid JSON")
 			return
 		}
 
 		store[req.Key] = req.Value
-		respondJSON(w, map[string]string{"message": "Update successful"})
+		respondJSON(w, "success", map[string]string{"key": req.Key, "value": req.Value})
 	})
-	http.HandleFunc("/getjson", func(w http.ResponseWriter, r *http.Request) {
-		key := r.URL.Query().Get("key")
+
+	// 读取 / 更新 / 删除（GET, PUT, DELETE /kv/{key}）
+	http.HandleFunc("/kv/", func(w http.ResponseWriter, r *http.Request) {
+		key := getKeyFromPath(r.URL.Path)
 		if key == "" {
-			respondJSON(w, map[string]string{"error": "Missing key"})
+			respondJSON(w, "error", "Missing key in URL")
 			return
 		}
-		value, ok := store[key]
-		if !ok {
-			respondJSON(w, map[string]string{"error": "Key not found"})
-			return
+
+		switch r.Method {
+		case http.MethodGet: // 读取
+			value, ok := store[key]
+			if !ok {
+				respondJSON(w, "error", "Key not found")
+				return
+			}
+			respondJSON(w, "success", map[string]string{"key": key, "value": value})
+
+		case http.MethodPut: // 更新
+			var req KVRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			if err != nil || req.Value == "" {
+				respondJSON(w, "error", "Invalid JSON")
+				return
+			}
+
+			_, exists := store[key]
+			if !exists {
+				respondJSON(w, "error", "Key not found")
+				return
+			}
+
+			store[key] = req.Value
+			respondJSON(w, "success", map[string]string{"key": key, "value": req.Value})
+
+		case http.MethodDelete: // 删除
+			_, ok := store[key]
+			if !ok {
+				respondJSON(w, "error", "Key not found")
+				return
+			}
+			delete(store, key)
+			respondJSON(w, "success", fmt.Sprintf("Key %s deleted", key))
+
+		default:
+			http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
 		}
-		respondJSON(w, map[string]string{"key": key, "value": value})
-	})
-	// 获取 key
-	http.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
-		key := r.URL.Query().Get("key")
-		if key == "" {
-			fmt.Fprintf(w, "Missing key\n")
-			return
-		}
-		value, ok := store[key]
-		if !ok {
-			fmt.Fprintf(w, "Key not found\n")
-			return
-		}
-		fmt.Fprintf(w, "Value = %s\n", value)
-	})
-	http.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) {
-		key := r.URL.Query().Get("key")
-		if key == "" {
-			fmt.Fprintf(w, "Missing key\n")
-			return
-		}
-		value, ok := store[key]
-		if !ok {
-			fmt.Fprintf(w, "Key not found\n")
-			return
-		}
-		fmt.Fprintf(w, "Delete %s = %s\n", key, value)
-		delete(store, key)
-		respondJSON(w, map[string]string{"message": "Key deleted successfully"})
-	})
-	http.HandleFunc("/setjson", func(w http.ResponseWriter, r *http.Request) {
-		var req KVRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		if err != nil || req.Key == "" || req.Value == "" {
-			respondJSON(w, map[string]string{"error": "Invalid JSON"})
-			return
-		}
-		store[req.Key] = req.Value
-		respondJSON(w, map[string]string{"message": "Set successful"})
 	})
 
 	fmt.Println("Server running at http://localhost:8080/")
