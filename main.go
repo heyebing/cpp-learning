@@ -4,8 +4,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 )
+
+// 保存到文件
+func saveToFile(filename string) error {
+	data, err := json.MarshalIndent(store, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filename, data, 0644)
+}
+
+// 从文件加载
+func loadFromFile(filename string) error {
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		return err // 文件不存在时可以忽略
+	}
+	return json.Unmarshal(file, &store)
+}
 
 type KVRequest struct {
 	Key   string `json:"key"`
@@ -35,6 +54,8 @@ func getKeyFromPath(path string) string {
 
 func main() {
 	// 创建（POST /kv）
+	loadFromFile("kvstore.json")
+
 	http.HandleFunc("/kv", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
@@ -49,6 +70,7 @@ func main() {
 		}
 
 		store[req.Key] = req.Value
+		saveToFile("kvstore.json")
 		respondJSON(w, "success", map[string]string{"key": req.Key, "value": req.Value})
 	})
 
@@ -84,6 +106,7 @@ func main() {
 			}
 
 			store[key] = req.Value
+			saveToFile("kvstore.json")
 			respondJSON(w, "success", map[string]string{"key": key, "value": req.Value})
 
 		case http.MethodDelete: // 删除
@@ -93,6 +116,7 @@ func main() {
 				return
 			}
 			delete(store, key)
+			saveToFile("kvstore.json")
 			respondJSON(w, "success", fmt.Sprintf("Key %s deleted", key))
 
 		default:
